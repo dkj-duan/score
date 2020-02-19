@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.bdqn.mapper.SumMapper" >
+  <resultMap id="BaseResultMap" type="cn.bdqn.domain.Sum" >
+    <id column="sum_id" property="sumId" jdbcType="INTEGER" />
+    <result column="sum_score" property="sumScore" jdbcType="INTEGER" />
+    <!--    用户映射-->
+    <association property="user" javaType="cn.bdqn.domain.User">
+      <id column="user_id" property="userId" jdbcType="INTEGER" />
+      <result column="user_name" property="userName" jdbcType="VARCHAR" />
+      <result column="create_date" property="createDate" jdbcType="TIMESTAMP" />
+    </association>
+  </resultMap>
+
+  <sql id="Base_Column_List" >
+    s.sum_id, s.user_id, s.sum_score,u.user_id,u.user_name,u.create_date
+  </sql>
+
+<!--  根据主键查询-->
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select
+    <include refid="Base_Column_List" />
+    from t_sum as s ,t_user as u
+    where s.user_id = u.user_id and s.sum_id = #{sumId,jdbcType=INTEGER}
+  </select>
+
+<!--  根据名字模糊查询-->
+  <select id="selectByUserName" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from t_sum as s ,t_user as u
+    where s.user_id = u.user_id
+    <if test="userName!=null and userName!=''">
+        and u.user_name like concat('%',#{userName},'%')
+    </if>
+    <if test="score!=null and score!=''">
+      <![CDATA[
+        and s.sum_score >= ${score}
+      ]]>
+    </if>
+    order by s.sum_score desc
+  </select>
+
+<!--  根据用户查询-->
+  <select id="selectByUserId" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from t_sum as s ,t_user as u
+    where s.user_id = u.user_id and s.user_id = #{userId}
+  </select>
+<!--  根基主键删除-->
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from t_sum
+    where sum_id = #{sumId,jdbcType=INTEGER}
+  </delete>
+<!--  添加用户总积分表-->
+  <insert id="insert" parameterType="cn.bdqn.domain.Sum" >
+    insert into t_sum ( user_id, sum_score
+      )
+    values ( #{user.userId,jdbcType=INTEGER}, #{sumScore,jdbcType=INTEGER}
+      )
+  </insert>
+<!--  选择性添加-->
+  <insert id="insertSelective" parameterType="cn.bdqn.domain.Sum" >
+    insert into t_sum
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="sumId != null" >
+        sum_id,
+      </if>
+      <if test="user.userId != null" >
+        user_id,
+      </if>
+      <if test="sumScore != null" >
+        sum_score,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="sumId != null" >
+        #{sumId,jdbcType=INTEGER},
+      </if>
+      <if test="user.userId != null" >
+        #{user.userId,jdbcType=INTEGER},
+      </if>
+      <if test="sumScore != null" >
+        #{sumScore,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+
+<!--  选择性更新-->
+  <update id="updateByPrimaryKeySelective" parameterType="cn.bdqn.domain.Sum" >
+    update t_sum
+    <set >
+      <if test="sumScore != null" >
+        sum_score = #{sumScore,jdbcType=INTEGER},
+      </if>
+    </set>
+    where user_id = #{user.userId,jdbcType=INTEGER}
+  </update>
+<!--  更新全部-->
+  <update id="updateByPrimaryKey" parameterType="cn.bdqn.domain.Sum" >
+    update t_sum
+    set user_id = #{user.userId,jdbcType=INTEGER},
+      sum_score = #{sumScore,jdbcType=INTEGER}
+    where sum_id = #{sumId,jdbcType=INTEGER}
+  </update>
+</mapper>

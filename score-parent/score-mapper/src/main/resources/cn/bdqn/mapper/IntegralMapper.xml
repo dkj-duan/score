@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.bdqn.mapper.IntegralMapper" >
+  <resultMap id="BaseResultMap" type="cn.bdqn.domain.Integral" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="score" property="score" jdbcType="INTEGER" />
+    <result column="create_date" property="createDate" jdbcType="TIMESTAMP" />
+
+<!--    用户映射-->
+    <association property="user" javaType="cn.bdqn.domain.User">
+      <id column="user_id" property="userId" jdbcType="INTEGER" />
+      <result column="user_name" property="userName" jdbcType="VARCHAR" />
+      <result column="create_date" property="createDate" jdbcType="TIMESTAMP" />
+    </association>
+  </resultMap>
+  <sql id="Base_Column_List" >
+    i.id, i.user_id, i.score, i.create_date ,u.user_id,u.user_name,u.create_date
+  </sql>
+<!--  根据主键id查询-->
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from t_integral as i,t_user as u
+    where i.user_id = u.user_id and i.id = #{id,jdbcType=INTEGER}
+  </select>
+
+<!--  根据用户id查询-->
+  <select id="selectByUserId" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from t_integral as i,t_user as u
+    <where>
+      i.user_id = u.user_id
+      <if test="UserId!=null and UserId!=''">
+        and i.user_id = #{userId}
+      </if>
+    </where>
+    order by i.create_date desc
+  </select>
+
+<!--  查询某个时间段之间的某个用户的积分明细-->
+  <select id="selectByTime" resultMap="BaseResultMap">
+
+    select
+    <include refid="Base_Column_List"/>
+    <![CDATA[
+    from t_integral as i,t_user as u
+    where  i.user_id = u.user_id and u.user_id= #{userId} and i.create_date>=#{startTime} and i.create_date <= #{endTime}
+    order by i.create_date desc
+     ]]>
+  </select>
+
+<!--  根据主键id删除-->
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from t_integral
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+
+<!--  添加积分明细-->
+  <insert id="insert" parameterType="cn.bdqn.domain.Integral" >
+    insert into t_integral ( user_id, score,
+      create_date)
+    values (#{user.userId,jdbcType=INTEGER}, #{score,jdbcType=INTEGER},
+      #{createDate,jdbcType=TIMESTAMP})
+  </insert>
+  <!--  添加积分明细-->
+  <insert id="insertSelective" parameterType="cn.bdqn.domain.Integral" >
+    insert into t_integral
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="user.userId != null" >
+        user_id,
+      </if>
+      <if test="score != null" >
+        score,
+      </if>
+      <if test="createDate != null" >
+        create_date,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="user.userId != null" >
+        #{user.userId,jdbcType=INTEGER},
+      </if>
+      <if test="score != null" >
+        #{score,jdbcType=INTEGER},
+      </if>
+      <if test="createDate != null" >
+        #{createDate,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+
+<!--选择性更新-->
+  <update id="updateByPrimaryKeySelective" parameterType="cn.bdqn.domain.Integral" >
+    update t_integral
+    <set >
+      <if test="user.userId != null" >
+        user_id = #{user.userId,jdbcType=INTEGER},
+      </if>
+      <if test="score != null" >
+        score = #{score,jdbcType=INTEGER},
+      </if>
+      <if test="createDate != null" >
+        create_date = #{createDate,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+<!--  更新全部-->
+  <update id="updateByPrimaryKey" parameterType="cn.bdqn.domain.Integral" >
+    update t_integral
+    set user_id = #{user.userId,jdbcType=INTEGER},
+      score = #{score,jdbcType=INTEGER},
+      create_date = #{createDate,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+
+</mapper>
